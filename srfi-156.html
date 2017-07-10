@@ -1,0 +1,382 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>SRFI ?: Syntactic combiners for binary predicates</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/srfi.css" type="text/css" />
+    <link href="/favicon.png" rel="icon" sizes="192x192" type="image/png" />
+  </head>
+
+  <body>
+
+<h1>Title</h1>
+
+Syntactic combiners for binary predicates
+
+<h1>Author</h1>
+
+Panicz Maciej Godek
+
+<h1>Status</h1>
+
+??? the draft/final/withdrawn status of the SRFI, information on how
+to subscribe to its mailing list, and important dates in its history
+
+<h1>Abstract</h1>
+
+<p>The power and universality of the prefix notation employed by Scheme
+  and other dialects of Lisp can be intimidating. However, we find that
+  there are occasions when prefix syntax can be confusing and lead to
+  code that is not self-documenting. We have identified that one of such
+  cases is the use of asymmetrical binary predicates.</p>
+
+<p>Probably the most common examples are the numerical comparison
+  predicates <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;=</code>
+  and <code>&gt;</code>. It is non obvious, for instance, how the expression
+  <code>(&lt; a b)</code> should be pronounced.</p>
+
+<p>The problem gets more serious in the case of user-defined binary
+  predicates. For example, in the expression <code>(divides? x y)</code>
+  the role of arguments is unclear: we don't know whether the author
+  of the <code>divides?</code> predicate intended it to check whether
+  <code>x</code> divides <code>y</code> or whether <code>y</code>
+  divides <code>x</code>.</p>
+
+<p>And while there seems to exist a silent convention among Schemers
+  to interpret predicates like <code>(has-something-to? x y)</code>
+  as "<code>x</code> has something to <code>y</code>", we believe
+  that this convention should be made explicit, and confirmed by
+  the forms available in the language.</p>
+
+<p>We therefore propose a thin layer of "syntactic stevia" that can
+  be implemented using regular Scheme macros. We suggest, that the
+  code <code>(is x &lt; y)</code> should be transformed
+  to <code>(&lt; x y)</code>, and <code>(is x &lt; y &lt;= z)</code>
+  -- to <code>(and (&lt; x y) (&lt;= y z))</code>. In addition, we
+  suggest special meaning to the <code>_</code> symbol:
+  <code>(is _ &lt; y)</code> and <code>(is x &lt; _)</code>
+  should be transformed to <code>(lambda (_) (&lt; _ y))</code>
+  and <code>(lambda (_) (&lt x _))</code>, respectively.
+  This SRFI document also describes some other uses of the
+  <code>is</code> macro and its limitations.</p>
+
+<h1>Issues</h1>
+
+??? Optional section that may point out things to be resolved.  This
+will not appear in the final SRFI.
+
+<h1>Rationale</h1>
+
+<p>In <i>Evolution of Lisp</i> Richard Gabriel and Guy Steele wrote:
+
+<blockquote>
+  The idea of introducing Algol-like syntax into Lisp keeps
+  popping up and has seldom failed to create enormous controversy
+  between those who find the universal use of S-expressions a technical
+  advantage (and don’t mind the admitted relative clumsiness of
+  S-expressions for numerical expressions) and those who are certain
+  that algebraic syntax is more concise, more convenient, or even
+  more natural (whatever that may mean, considering that all these
+  notations are artificial).
+</blockquote>
+
+However, even though the language of mathematics is an artificial
+invention of our civilization, there is a tradition of calling our
+spoken ethnic languages <i>natural</i>.</p>
+
+<p>Ethnic languages usually allow to express certain binary relations
+  using a sort of infix syntax. We can say, for example,
+  "John <i>is taller than</i> Tom", "Joe <i>is in love with</i> Jane"
+  and so on.</p>
+
+<p>Note that the order in which the elements appear in the sentence
+  is crucial: even if Joe is in love with Jane, it need not be the
+  case that Jane is in love with John; if John is taller than Tom,
+  then it is reasonable to expect that Tom is not taller than John.</p>
+
+<p>It should be apparent that the prefix notation employed by the
+  Scheme programming language obscures the roles of specific
+  objects from the relation. In the expression
+  <code>(taller-than? John Tom)</code> it is unclear whether we mean
+  that John is taller than Tom or the other way around.</p>
+
+<p>Although we could in principle employ a consistent convention
+  regarding the roles of arguments in such relations (and this has
+  indeed been the case so far), the power of Scheme programming
+  language allows us to go beyond a mere convention. In particular,
+  we can extend Scheme with a syntactic form which embodies this
+  convention.</p>
+
+<h2>Infix relations</h2>
+
+<p>This document proposes to augment Scheme with a new syntactic
+  form, <code>is</code>, so that, for example, the expression
+  <code>(is John taller-than? Tom)</code> is expanded to
+  <code>(taller-than? John Tom)</code>.</p>
+
+<p>In addition improved code readability, the introduction
+  of the <code>is</code> form gives an occasion to provide
+  some convenient special behaviour in some particular cases.
+  While some Schemers may find the lack of regularity
+  and predictability of the <code>is</code> form repulsive,
+  we believe that it actually allows to express some common
+  operations more succinctly.</p>
+
+<h2>Short-hand lambda expressions</h2>
+
+<p>For example, we decided to treat the <code>_</code> (underscore)
+  symbol differently than other symbols. <code>(is _ taller-than? John)</code>
+  is expanded to <code>(lambda (_) (taller-than? _ John))</code>,
+  thereby making the functionality of the <code>is</code> form
+  partially overlap with the <code>cut</code> special form defined
+  in the SRFI 26 document.</p>
+
+<p>We chose the underscore symbol, although the <code>cut</code>
+  macro uses the <code>&lt;&gt;</code> symbol, because it has been
+  used as a special non-bindable symbol in various pattern matchers
+  for Scheme (as well as in the Prolog language). It has also
+  traditionally been used to name values that are meant to be
+  ignored, so we believe that our choice should not be in conflict
+  with existing practices.</p>
+
+<h2>Handling more arguments</h2>
+    
+<p>If the <code>is</code> macro is used with more than three arguments,
+  we require that the number of arguments is odd, and every second
+  argument is a binary predicate. In such case, the macro expands
+  to a conjunction of conditions, in a way that is often used by
+  mathematicians. For example,
+  <code>(is x &lt; y &lt;= z &lt; w)</code> expands to
+  <code>(and (&lt; x y) (&lt;= y z) (&lt; z w))</code>.
+</p>
+
+<h2>Handling less arguments</h2>
+
+<p>The <code>is</code> macro could technically also be passed less than
+  three arguments. Although we could rule out such usages by raising
+  a syntax error, it makes sense to overload the <code>is</code> operator
+  to behave meaningfully.</p>
+
+<p>The single argument case expands to a predicate that checks whether
+  its argument is <code>equal?</code> to the argument to the <code>is</code>
+  macro. For example, <code>(is '(1 2 3))</code> expands to
+  <code>(lambda (x) (equal? x '(1 2 3)))</code>. This case is therefore
+  effectively equivalent to <code>(is _ equal? '(1 2 3))</code>.</p>
+
+<p>The two argument case isn't particularly useful: <code>(is x even?)</code>
+  simply expands to <code>(even? x)</code>. For consistency we also require
+  that <code>(is _ even?)</code> simply expands to <code>even?</code>.</p>
+
+<h2>Negation</h2>
+
+<p>In addition to the <code>is</code> form, this SRFI provides an implementation
+  of the <code>isnt</code> form, which negates the behavior of <code>is</code>.
+  Although we didn't find that form particularly useful, we are certain that
+  it may find its use, and if it were absent from the language, Schemers would
+  come up with their own implementations. As a matter of fact, in our experiments
+  with parroting the English language, we initially used the <code>isn't</code>
+  symbol, which failed to work on some implementations.</p>
+
+<h1>Specification</h1>
+
+<p>The exact and precise specification in terms of <code>syntax-rules</code>
+  is given in the <b>Implementation</b> section. This section contains
+  some remarks which explain some use cases that are intentionally meant
+  to be unspecified.</p>
+
+<h2>Multiple instances of underscore symbol</h2>
+
+<p>There are at least two possible interpretations of the expression
+  <code>(is _ related-to? _)</code>: it could either be understood
+  as a predicate which checks whether an object is related to itself,
+  i.e. <code>(lambda (_) (related-to? _ _))</code>, or as a notation
+  equivalent to the plain <code>related-to?</code> function.</p>
+
+<p>Since none of these interpretations is clearly better than the other,
+  we discourage such uses of the language and leave the actual behavior
+  unspecified. In particular, implementations may report syntax error
+  when they detect such use cases.</p>
+
+<h2>Underscore in the position of a later argument</h2>
+
+<p>This document only specifies the treatment of underscore in the
+  position of the first and the second argument to the predicate. However,
+  since we allow the <code>is</code> macro to accept more arguments,
+  it could in principle make sense to interpret usages like
+  <code>(is x &lt; y &lt;= _)</code> as <code>lambda</code>
+  forms.</p>
+
+<p>The problem with such cases is that they complicate the implementation
+  for the sake of something that cannot be considered a good coding practice.
+  So while it is fine for the implementers to cover this use case, we
+  discourage the users from using the <code>is</code> form in such
+  a way, and therefore leave this behavior unspecified.</p>
+
+<h2>Other use cases</h2>
+
+<p>It might be tempting to abuse the <code>is</code> macro, and come up
+with usages such as <code>(map (is _ + 1) '(1 2 3))</code>. We discourage
+such practice and advocate to limit the application of the <code>is</code>
+macro to binary and unary predicates and equality checking.</p>
+
+<h2>The lack of infix definitions</h2>
+
+<p>It might be tempting to extend the infix syntax cover not only usages,
+but also definitions of binary predicates. For example, one could wish
+to write
+
+<pre>
+  (define/infix (is x divisible-by? y)
+    (zero? (modulo x y)))
+</pre>
+
+This SRFI does not provide anything like the <code>define/infix</code>
+form, as we do not think it is such a good idea. (However, modifying the
+behavior of the <code>define</code> form to check whether its first argument
+is <code>is</code> would be a much worse idea.)</p>
+
+<p>We believe that in the definition context it's best to leave the
+  roles of arguments to the convention that has been uttered in this SRFI.</p>
+
+<h2>Relation to other SRFIs</h2>
+
+<h3>SRFI 105 Curly-infix-expressions</h3>
+
+<p>Some people may argue that the problem this SRFI is trying to address
+  can be solved by applying the solution provided by
+  the curly-infix-expressions.</p>
+
+<p>However, we find the change proposed by the SRFI 105 very invasive
+  and feel that their authors failed to provide the right justification
+  for their idea. In particular, they didn't notice the difference between
+  infix used with binary predicates and infix used for algebraic operations.</p>
+
+<p>While we do not deny that infix syntax for algebraic formulas has its value,
+  this value manifests itself mainly in the context of mathematical inquiries
+  and education (for example, to explain the concepts of commutativity
+  and associativity), and the context of software creation exposes
+  different characteristics.</p>
+
+<h3>SRFI 26 Notation for Specializing Parameters Without Currying</h3>
+
+<p>The behavior of the <code>is</code> macro in the presence of the
+  underscore symbol resembles the use of the <code>cut</code> macro.
+  According to our investigation, the use of the <code>cut</code> macro
+  to specialize one of arguments of a binary predicate accounts for some
+  of its most common usages.</p>
+
+<p>While we appreciate the mathematical insight which allows to perceive
+  fixing specific arguments as making cuts through some multi-dimensional
+  domains, we claim that from the point of view of program comprehension,
+  this insight is usually an irrelevant detail.</p>
+
+<h1>Implementation</h1>
+
+The implementation consists of three macros. The <code>infix</code> macro
+is a helper macro and is not intended to be used directly. The <code>is</code>
+and <code>isnt</code> macros were described in depth in previous sections.
+
+<pre>
+(define-syntax infix
+  (syntax-rules () 
+    ((_ x related-to? y)
+     (related-to? x y))
+    ((_ x related-to? y . likewise)
+     (and (infix x related-to? y)
+	  (infix y . likewise)))))
+
+(define-syntax is 
+  (syntax-rules (_)
+    ((is _ related-to? right . likewise)
+     (lambda (_)
+       (infix _ related-to? right . likewise)))
+    
+    ((is left related-to? _ . likewise)
+     (lambda (_)
+       (infix left related-to? _ . likewise)))
+    
+    ((is x related-to? y . likewise)
+     (infix x related-to? y . likewise))
+
+    ((is x)
+     (lambda (y)
+       (equal? x y)))
+
+    ((is _ predicate?)
+     predicate?)
+    
+    ((is item predicate?)
+     (predicate? item))))
+
+(define-syntax isnt
+  (syntax-rules (_)
+    ((isnt x)
+     (lambda (y)
+       (not (equal? x y))))
+
+    ((isnt _ predicate?)
+     (lambda (_) (not (predicate? _))))
+    
+    ((isnt x predicate?)
+     (not (predicate? x)))
+    
+    ((isnt _ related-to? right . likewise)
+     (lambda (_)
+       (not (infix _ related-to? right . likewise))))
+    
+    ((isnt left related-to? _ . likewise)
+     (lambda (_)
+       (not (infix left related-to? _ . likewise))))
+
+    ((isnt x related-to? y . likewise)
+     (not (infix x related-to? y . likewise)))))
+</pre>
+
+
+<h1>Acknowledgements</h1>
+
+<p>I would like to thank John Cowan for encouraging me to write this
+  SRFI, and to Nils M Holm for his early appreciation of this work.
+  I am also grateful to Bill from the comp.lang.scheme group
+  for helping me trace the uses of the <code>cut</code> macro
+  in the scheme code base.</p>
+
+<p>I really apprecite the efforts of the whole Scheme community
+  and every single person who contributed to the development
+  of this beautiful language and culture over the years, and
+  I am happy to be a part of it, however small.</p>
+
+<p>Finally, I would like to thank my friend Ścisław Dercz for sincerely
+  discouraging me from this undertaking. I think his rants contributed
+  positively to the quality of this work (although perhaps not positively
+  enough).</p>
+
+<h1>Copyright</h1>
+Copyright (C) Panicz Maciej Godek (2017).  All Rights Reserved. 
+
+<p>
+  Permission is hereby granted, free of charge, to any person
+  obtaining a copy of this software and associated documentation files
+  (the "Software"), to deal in the Software without restriction,
+  including without limitation the rights to use, copy, modify, merge,
+  publish, distribute, sublicense, and/or sell copies of the Software,
+  and to permit persons to whom the Software is furnished to do so,
+  subject to the following conditions:
+
+<p>
+  The above copyright notice and this permission notice shall be
+  included in all copies or substantial portions of the Software.
+
+<p>
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+
+  <hr>
+  <address>Editor: <a href="mailto:srfi-editors+at+srfi+dot+schemers+dot+org">Arthur A. Gleckler</a></address></body></html>
