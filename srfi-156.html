@@ -20,7 +20,13 @@ Panicz Maciej Godek
 
 <h1>Status</h1>
 
-<p>This SRFI is currently in <em>draft</em> status.  Here is <a href="http://srfi.schemers.org/srfi-process.html">an explanation</a> of each status that a SRFI can hold.  To provide input on this SRFI, please send email to <code><a href="mailto:srfi+minus+156+at+srfi+dotschemers+dot+org">srfi-156@<span class="antispam">nospam</span>srfi.schemers.org</a></code>.  To subscribe to the list, follow <a href="http://srfi.schemers.org/srfi-list-subscribe.html">these instructions</a>.  You can access previous messages via the mailing list <a href="http://srfi-email.schemers.org/srfi-156">archive</a>.</p>
+<p>This SRFI is currently in <em>draft</em> status.
+  Here is <a href="http://srfi.schemers.org/srfi-process.html">an explanation</a>
+  of each status that a SRFI can hold.  To provide input on this SRFI, please send
+  email to
+  <code><a href="mailto:srfi+minus+156+at+srfi+dotschemers+dot+org">srfi-156@<span class="antispam">nospam</span>srfi.schemers.org</a></code>.
+  To subscribe to the list, follow <a href="http://srfi.schemers.org/srfi-list-subscribe.html">these instructions</a>.
+  You can access previous messages via the mailing list <a href="http://srfi-email.schemers.org/srfi-156">archive</a>.</p>
 <ul>
   <li>Received: 2017/7/9</li>
   <li>60-day deadline: 2017/9/8</li>
@@ -29,36 +35,14 @@ Panicz Maciej Godek
 
 <h1>Abstract</h1>
 
-<p>The power and universality of the prefix notation employed by Scheme
-  and other dialects of Lisp can be intimidating. However, we find that
-  there are occasions when prefix syntax can be confusing and lead to
-  code that is not self-documenting. We have identified that one of such
-  cases is the use of asymmetrical binary predicates.</p>
-
-<p>Probably the most common examples are the numerical comparison
-  predicates <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;=</code>
-  and <code>&gt;</code>. It is non obvious, for instance, how the expression
-  <code>(&lt; a b)</code> should be pronounced.</p>
-
-<p>The problem gets more serious in the case of user-defined binary
-  predicates. For example, in the expression <code>(divides? x y)</code>
-  the role of arguments is unclear: we don't know whether the author
-  of the <code>divides?</code> predicate intended it to check whether
-  <code>x</code> divides <code>y</code> or whether <code>y</code>
-  divides <code>x</code>.</p>
-
-<p>And while there seems to exist a silent convention among Schemers
-  to interpret predicates like <code>(has-something-to? x y)</code>
-  as "<code>x</code> has something to <code>y</code>", we believe
-  that this convention should be made explicit, and confirmed by
-  the forms available in the language.</p>
-
-<p>We therefore propose a thin layer of "syntactic stevia" that can
-  be implemented using regular Scheme macros. We suggest, that the
-  code <code>(is x &lt; y)</code> should be transformed
-  to <code>(&lt; x y)</code>, and <code>(is x &lt; y &lt;= z)</code>
-  -- to <code>(and (&lt; x y) (&lt;= y z))</code>. In addition, we
-  suggest special meaning to the <code>_</code> symbol:
+<p>Recognizing binary predicates as a specific area
+  in which the use of prefix operators is an impediment,
+  we propose a thin layer of "syntactic stevia" for in-fixing
+  such predicates. It can be implemented using regular Scheme
+  macros. We suggest, that the code <code>(is x &lt; y)</code> should
+  be transformed to <code>(&lt; x y)</code>, and <code>(is x &lt; y &lt;= z)</code>
+  -- to <code>(let ((y* y)) (and (&lt; x y*) (&lt;= y* z)))</code>.
+  In addition, we suggest special meaning to the <code>_</code> symbol:
   <code>(is _ &lt; y)</code> and <code>(is x &lt; _)</code>
   should be transformed to <code>(lambda (_) (&lt; _ y))</code>
   and <code>(lambda (_) (&lt x _))</code>, respectively.
@@ -70,6 +54,30 @@ Panicz Maciej Godek
 None at present.
 
 <h1>Rationale</h1>
+
+<p>The power and universality of the prefix notation employed by Scheme
+  and other dialects of Lisp can be intimidating. However, we find that
+  there are occasions when prefix syntax can be confusing and lead to
+  code that is not self-documenting. We have identified that one of areas
+  is the use of asymmetrical binary predicates.</p>
+
+<p>Probably the most common examples are the numerical comparison
+  predicates <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;=</code>
+  and <code>&gt;</code>. It is non obvious, for instance, how the expression
+  <code>(&lt; a b)</code> should be pronounced.</p>
+
+<p>The problem gets more serious in the case of user-defined binary
+  predicates. For example, in the expression <code>(divisor? x y)</code>
+  the role of arguments is unclear: we don't know whether the author
+  of the <code>divisor?</code> predicate intended it to check whether
+  <code>x</code> is a divisor of <code>y</code> or whether <code>y</code>
+  is a divisor of <code>x</code>.</p>
+
+<p>And while there seems to exist a silent convention among Schemers
+  to interpret predicates like <code>(has-something-to? x y)</code>
+  as "<code>x</code> has something to <code>y</code>", we believe
+  that this convention should be made explicit, and confirmed by
+  the forms available in the language.</p>
 
 <p>In <i>Evolution of Lisp</i> Richard Gabriel and Guy Steele wrote:
 
@@ -111,6 +119,8 @@ spoken ethnic languages <i>natural</i>.</p>
   we can extend Scheme with a syntactic form which embodies this
   convention.</p>
 
+<h1>Specification</h1>
+
 <h2>Infix relations</h2>
 
 <p>This document proposes to augment Scheme with a new syntactic
@@ -118,7 +128,7 @@ spoken ethnic languages <i>natural</i>.</p>
   <code>(is John taller-than? Tom)</code> is expanded to
   <code>(taller-than? John Tom)</code>.</p>
 
-<p>In addition improved code readability, the introduction
+<p>In addition to improved code readability, the introduction
   of the <code>is</code> form gives an occasion to provide
   some convenient special behaviour in some particular cases.
   While some Schemers may find the lack of regularity
@@ -143,33 +153,21 @@ spoken ethnic languages <i>natural</i>.</p>
   ignored, so we believe that our choice should not be in conflict
   with existing practices.</p>
 
-<h2>Handling more arguments</h2>
-    
-<p>If the <code>is</code> macro is used with more than three arguments,
-  we require that the number of arguments is odd, and every second
-  argument is a binary predicate. In such case, the macro expands
-  to a conjunction of conditions, in a way that is often used by
-  mathematicians. For example,
-  <code>(is x &lt; y &lt;= z &lt; w)</code> expands to
-  <code>(and (&lt; x y) (&lt;= y z) (&lt; z w))</code>.
+<p>However, the <code>_</code> symbol should not be bound to
+  a new transformer, but instead it should be imported from
+  <code>(scheme base)</code> and re-exported, so that it could
+  be renamed by the users who prefer to stick with the
+  <code>&lt;&gt;</code> symbol from SRFI-26.</p>
+
+<h3>Multiple instances of underscore</h3>
+
+<p>If more than one instance of the underscore symbol appears
+  in the argument position of the <code>is</code> and <code>isnt</code>
+  macros, each occurrence counts as a separate argument (increasing
+  the arity of the resulting lambda accordingly). For example,
+  <code>(is _ &lt; _)</code> is equivalent to
+    <code>(lambda (_1 _2) (&lt; _1 _2))</code>.
 </p>
-
-<h2>Handling less arguments</h2>
-
-<p>The <code>is</code> macro could technically also be passed less than
-  three arguments. Although we could rule out such usages by raising
-  a syntax error, it makes sense to overload the <code>is</code> operator
-  to behave meaningfully.</p>
-
-<p>The single argument case expands to a predicate that checks whether
-  its argument is <code>equal?</code> to the argument to the <code>is</code>
-  macro. For example, <code>(is '(1 2 3))</code> expands to
-  <code>(lambda (x) (equal? x '(1 2 3)))</code>. This case is therefore
-  effectively equivalent to <code>(is _ equal? '(1 2 3))</code>.</p>
-
-<p>The two argument case isn't particularly useful: <code>(is x even?)</code>
-  simply expands to <code>(even? x)</code>. For consistency we also require
-  that <code>(is _ even?)</code> simply expands to <code>even?</code>.</p>
 
 <h2>Negation</h2>
 
@@ -181,40 +179,40 @@ spoken ethnic languages <i>natural</i>.</p>
   with parroting the English language, we initially used the <code>isn't</code>
   symbol, which failed to work on some implementations.</p>
 
-<h1>Specification</h1>
+<h2>Handling less arguments</h2>
 
-<p>The exact and precise specification in terms of <code>syntax-rules</code>
-  is given in the <b>Implementation</b> section. This section contains
-  some remarks which explain some use cases that are intentionally meant
-  to be unspecified.</p>
+<p>The <code>is</code> and <code>isnt</code> macros could technically
+  be passed less than three arguments. In particular, we interpret
+  <code>(isnt x prime?)</code> as <code>(not (prime? x))</code>,
+  and <code>(isnt _ prime?)</code> as
+  <code>(lambda (_) (not (prime? _)))</code>. For consistency,
+  we interpret the usages of the <code>is</code> macro similarly,
+  although it may not seem particularly useful.</p>
 
-<h2>Multiple instances of underscore symbol</h2>
+<p>It is illegal to use the <code>is</code> and <code>isnt</code>
+  macros with less than two arguments, and such attempts should
+  raise a syntax error.</p>
 
-<p>There are at least two possible interpretations of the expression
-  <code>(is _ related-to? _)</code>: it could either be understood
-  as a predicate which checks whether an object is related to itself,
-  i.e. <code>(lambda (_) (related-to? _ _))</code>, or as a notation
-  equivalent to the plain <code>related-to?</code> function.</p>
-
-<p>Since none of these interpretations is clearly better than the other,
-  we discourage such uses of the language and leave the actual behavior
-  unspecified. In particular, implementations may report syntax error
-  when they detect such use cases.</p>
-
-<h2>Underscore in the position of a later argument</h2>
-
-<p>This document only specifies the treatment of underscore in the
-  position of the first and the second argument to the predicate. However,
-  since we allow the <code>is</code> macro to accept more arguments,
-  it could in principle make sense to interpret usages like
-  <code>(is x &lt; y &lt;= _)</code> as <code>lambda</code>
-  forms.</p>
-
-<p>The problem with such cases is that they complicate the implementation
-  for the sake of something that cannot be considered a good coding practice.
-  So while it is fine for the implementers to cover this use case, we
-  discourage the users from using the <code>is</code> form in such
-  a way, and therefore leave this behavior unspecified.</p>
+<h2>Handling more arguments</h2>
+    
+<p>If the <code>is</code> macro is used with more than three arguments,
+  then every second argument must be a predicate. In such case, the macro expands
+  to a conjunction of conditions, in a way that is often used by
+  mathematicians. For example,
+  <code>(is x &lt; y &lt;= z &lt; w finite?)</code> expands to
+  <pre>
+    (let ((y* y))
+      (and (&lt; x y*)
+           (let ((z* z))
+             (and (&lt;= y* z*)
+                  (let ((w* w))
+                    (and (&lt; z* w*)
+                         (finite? w*)))))))
+  </pre>
+  where <code>y*</code>, <code>z*</code> and <code>w*</code>
+  are <i>hygienic identifiers</i> (i.e. they are guaranteed not to shadow
+  any existing bindings).
+</p>
 
 <h2>Other use cases</h2>
 
@@ -276,74 +274,74 @@ is <code>is</code> would be a much worse idea.)</p>
 
 <h1>Implementation</h1>
 
-The implementation consists of three macros. The <code>infix</code> macro
-is a helper macro and is not intended to be used directly. The <code>is</code>
-and <code>isnt</code> macros were described in depth in previous sections.
+The implementation consists of five macros. The <code>infix/posix</code>,
+<code>extract-placeholders</code> and <code>identity-syntax</code> are helper macros
+and are not intended to be used directly. The <code>is</code>
+and <code>isnt</code> macros were described in depth in the previous section.
 
 <pre>
-(define-syntax infix
-  (syntax-rules () 
-    ((_ x related-to? y)
-     (related-to? x y))
-    ((_ x related-to? y . likewise)
-     (and (infix x related-to? y)
-	  (infix y . likewise)))))
+  (define-syntax infix/postfix
+    (syntax-rules ()
+      ((infix/postfix x somewhat?)
+       (somewhat? x))
 
-(define-syntax is 
-  (syntax-rules (_)
-    ((is _ related-to? right . likewise)
-     (lambda (_)
-       (infix _ related-to? right . likewise)))
-    
-    ((is left related-to? _ . likewise)
-     (lambda (_)
-       (infix left related-to? _ . likewise)))
-    
-    ((is x related-to? y . likewise)
-     (infix x related-to? y . likewise))
+      ((infix/postfix left related-to? right)
+       (related-to? left right))
 
-    ((is x)
-     (lambda (y)
-       (equal? x y)))
+      ((infix/postfix left related-to? right . likewise)
+       (let ((right* right))
+         (and (infix/postfix left related-to? right*)
+              (infix/postfix right* . likewise))))))
 
-    ((is _ predicate?)
-     predicate?)
-    
-    ((is item predicate?)
-     (predicate? item))))
+  (define-syntax extract-placeholders
+    (syntax-rules (_)
+      ((extract-placeholders final () () body)
+       (final (infix/postfix . body)))
 
-(define-syntax isnt
-  (syntax-rules (_)
-    ((isnt x)
-     (lambda (y)
-       (not (equal? x y))))
+      ((extract-placeholders final () args body)
+       (lambda args (final (infix/postfix . body))))
 
-    ((isnt _ predicate?)
-     (lambda (_) (not (predicate? _))))
-    
-    ((isnt x predicate?)
-     (not (predicate? x)))
-    
-    ((isnt _ related-to? right . likewise)
-     (lambda (_)
-       (not (infix _ related-to? right . likewise))))
-    
-    ((isnt left related-to? _ . likewise)
-     (lambda (_)
-       (not (infix left related-to? _ . likewise))))
+      ((extract-placeholders final (_ op . rest) (args ...) (body ...))
+       (extract-placeholders final rest (args ... arg) (body ... arg op)))
 
-    ((isnt x related-to? y . likewise)
-     (not (infix x related-to? y . likewise)))))
+      ((extract-placeholders final (arg op . rest) args (body ...))
+       (extract-placeholders final rest args (body ... arg op)))
+
+      ((extract-placeholders final (_) (args ...) (body ...))
+       (extract-placeholders final () (args ... arg) (body ... arg)))
+
+      ((extract-placeholders final (arg) args (body ...))
+       (extract-placeholders final () args (body ... arg)))))
+
+  (define-syntax identity-syntax
+    (syntax-rules ()
+      ((identity-syntax form)
+       form)))
+
+  (define-syntax is
+    (syntax-rules ()
+      ((is . something)
+       (extract-placeholders identity-syntax something () ()))))
+
+  (define-syntax isnt
+    (syntax-rules ()
+      ((is . something)
+       (extract-placeholders not something () ()))))
 </pre>
-
 
 <h1>Acknowledgements</h1>
 
 <p>I would like to thank John Cowan for encouraging me to write this
-  SRFI, and to Nils M Holm for his early appreciation of this work.
-  I am also grateful to Bill from the comp.lang.scheme group
-  for helping me trace the uses of the <code>cut</code> macro
+  SRFI, to Nils M Holm for his early appreciation of this work,
+  and to Marc Nieper-Wi&szlig;kirchen and Shiro Kawai for the discussion
+  and support.  I am also grateful to Bill from the comp.lang.scheme
+  group for helping me trace the uses of the <code>cut</code> macro
   in the scheme code base.</p>
+
+<p>This document would not see the daylight without the efforts
+  of the editor, Arthur Gleckler, who's doing the great work of
+  keeping the SRFI process running, deserving gratitude from the
+  whole community.</p>
 
 <p>I really appreciate the efforts of the whole Scheme community
   and every single person who contributed to the development
