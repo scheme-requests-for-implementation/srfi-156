@@ -39,7 +39,7 @@ Panicz Maciej Godek
   in which the use of prefix operators is an impediment,
   we propose a thin layer of "syntactic stevia" for in-fixing
   such predicates. It can be implemented using regular Scheme
-  macros. We suggest, that the code <code>(is x &lt; y)</code> should
+  macros. We suggest that the code <code>(is x &lt; y)</code> should
   be transformed to <code>(&lt; x y)</code>, and <code>(is x &lt; y &lt;= z)</code>
   -- to <code>(let ((y* y)) (and (&lt; x y*) (&lt;= y* z)))</code>.
   In addition, we suggest special meaning to the <code>_</code> symbol:
@@ -155,7 +155,7 @@ spoken ethnic languages <i>natural</i>.</p>
 
 <p>However, the <code>_</code> symbol should not be bound to
   a new transformer, but instead it should be imported from
-  <code>(scheme base)</code> and re-exported, so that it could
+  <code>(scheme base)</code> and re-exported, so that it can
   be renamed by the users who prefer to stick with the
   <code>&lt;&gt;</code> symbol from SRFI-26.</p>
 
@@ -179,10 +179,10 @@ spoken ethnic languages <i>natural</i>.</p>
   with parroting the English language, we initially used the <code>isn't</code>
   symbol, which failed to work on some implementations.</p>
 
-<h2>Handling less arguments</h2>
+<h2>Handling fewer arguments</h2>
 
 <p>The <code>is</code> and <code>isnt</code> macros could technically
-  be passed less than three arguments. In particular, we interpret
+  be passed fewer than three arguments. In particular, we interpret
   <code>(isnt x prime?)</code> as <code>(not (prime? x))</code>,
   and <code>(isnt _ prime?)</code> as
   <code>(lambda (_) (not (prime? _)))</code>. For consistency,
@@ -190,7 +190,7 @@ spoken ethnic languages <i>natural</i>.</p>
   although it may not seem particularly useful.</p>
 
 <p>It is illegal to use the <code>is</code> and <code>isnt</code>
-  macros with less than two arguments, and such attempts should
+  macros with fewer than two arguments, and such attempts should
   raise a syntax error.</p>
 
 <h2>Handling more arguments</h2>
