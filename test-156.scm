@@ -153,9 +153,6 @@
 (e.g.
  (isnt 1.0 = 1 zero?))
 
-(e.g.
- (is eq? eq? eq? eq?))
-
 ;; three arguments:
 
 (e.g.
@@ -193,12 +190,6 @@
 (e.g.
  (is 0 = 0.0 = 0+0i = 0.0+0.0i = (+) < (*) = 1 = 1.0 = 1+0i = 1.0+0.0i))
 
-(e.g.
- (is eq? eq? eq? eq? eq? eq? eq? eq? eq?))
-
-(e.g.
- (isnt eq? eq? eq? eq? eq? eq? eq? eq? procedure?))
-
 ;; ending with unary predicate:
 
 (e.g.
@@ -206,9 +197,6 @@
 
 (e.g.
  (isnt -0.4 < -0.1 <= 0 <= 0.0 < 0.1 < 0.4 <= 2 odd?))
-
-(e.g.
- (is eq? eq? eq? eq? eq? eq? eq? eq? eq? procedure?))
 
 ;; as procedures (with underscore):
 
