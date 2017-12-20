@@ -4,7 +4,9 @@
 
 This repository hosts [[https://srfi.schemers.org/srfi-156/][SRFI 156]]: Syntactic combiners for binary predicates, a [[https://srfi.schemers.org/][Scheme Request for Implementation]].
 
-This SRFI is in /draft/ status.
+This SRFI is in /final/ status.
+
+See also [[https://srfi.schemers.org/srfi-26/][SRFI 26: Notation for Specializing Parameters without Currying]].
 
 The full documentation for this SRFI can be found in the [[https://srfi.schemers.org/srfi-156/srfi-156.html][SRFI Document]].
 
